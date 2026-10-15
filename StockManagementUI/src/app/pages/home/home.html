@@ -1,0 +1,58 @@
+
+<div class="app-layout">
+
+  <app-menu
+    [mobileOpen]="menuOpen"
+    [activeMenu]="selectedMenu"
+    (menuSelected)="onMenuSelected($event)"
+    (closeMenu)="closeMenu()">
+  </app-menu>
+
+  <div
+    class="sidebar-overlay"
+    *ngIf="menuOpen"
+    (click)="closeMenu()">
+  </div>
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <div class="header-left">
+
+        <button
+          type="button"
+          class="mobile-menu-button"
+          aria-label="Open navigation menu"
+          [attr.aria-expanded]="menuOpen"
+          (click)="toggleMenu()">
+          ☰
+        </button>
+
+        <div>
+          <h1>{{ selectedMenu }}</h1>
+          <p class="header-subtitle">
+            Welcome to StockFlow Management System.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="header-actions">
+        <div class="profile">
+          <div class="avatar">AD</div>
+
+          <div class="profile-details">
+            <strong>Admin User</strong>
+            <span>Administrator</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+
+  </main>
+
+</div>

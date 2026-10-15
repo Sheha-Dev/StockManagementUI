@@ -1,0 +1,323 @@
+
+<div class="request-page">
+
+  <!-- Page header -->
+  <!-- <div class="page-header">
+    <div>
+      <h1>Stock Requests</h1>
+      <p>View, filter, and manage stock transfer requests.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="loadRequests()"
+      [disabled]="loading">
+      ↻ Refresh
+    </button>
+  </div> -->
+
+  <!-- Error notification -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filter form -->
+  <section class="filter-card">
+
+    <div class="card-heading">
+      <div>
+        <h2>Filter Requests</h2>
+        <p>Choose one or more filters to find requests.</p>
+      </div>
+    </div>
+
+    <form
+      [formGroup]="filterForm"
+      (ngSubmit)="applyFilters()">
+
+      <div class="filter-grid">
+
+        <!-- Status -->
+        <div class="form-field">
+          <label for="requestStatusId">Request Status</label>
+
+          <select
+            id="requestStatusId"
+            formControlName="requestStatusId">
+
+            <option value="">All statuses</option>
+
+            <option
+              *ngFor="let status of statuses"
+              [value]="status.requestStatusId">
+              {{ status.requestStatusName }}
+            </option>
+
+          </select>
+        </div>
+
+        <!-- From branch -->
+        <div class="form-field">
+          <label for="fromBranchId">From Branch</label>
+
+          <select
+            id="fromBranchId"
+            formControlName="fromBranchId">
+
+            <option value="">All branches</option>
+
+            <option
+              *ngFor="let branch of branches"
+              [value]="branch.branchId">
+              {{ branch.branchName }}
+            </option>
+
+          </select>
+        </div>
+
+        <!-- To branch -->
+        <div class="form-field">
+          <label for="toBranchId">To Branch</label>
+
+          <select
+            id="toBranchId"
+            formControlName="toBranchId">
+
+            <option value="">All branches</option>
+
+            <option
+              *ngFor="let branch of branches"
+              [value]="branch.branchId">
+              {{ branch.branchName }}
+            </option>
+
+          </select>
+        </div>
+
+        <!-- Product -->
+        <div class="form-field">
+          <label for="productId">Product</label>
+
+          <select
+            id="productId"
+            formControlName="productId">
+
+            <option value="">All products</option>
+
+            <option
+              *ngFor="let product of products"
+              [value]="product.productId">
+              {{ product.productName }}
+            </option>
+
+          </select>
+        </div>
+
+      </div>
+
+      <div class="filter-actions">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="resetFilters()">
+          Clear Filters
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="loading">
+          Apply Filters
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+  <!-- Requests table -->
+  <section class="table-card">
+
+    <div class="table-heading">
+      <div>
+        <h2>Request List</h2>
+
+        <p>
+          Page {{ pageNumber }} ·
+          {{ requests.length }} requests loaded
+        </p>
+      </div>
+
+      <span class="result-count">
+        {{ requests.length }} records
+      </span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="loading">
+      Loading stock requests...
+    </div>
+
+    <div
+      class="table-container"
+      *ngIf="!loading">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>From Branch</th>
+            <th>To Branch</th>
+            <th>Products / Quantities</th>
+            <th>Total Qty</th>
+            <th>Status</th>
+          
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr
+            *ngFor="let request of requests; trackBy: trackByRequestId">
+
+            <td class="request-id">
+              {{ request.requestId }}
+            </td>
+
+            <td>{{ request.fromBranchName }}</td>
+
+            <td>{{ request.toBranchName }}</td>
+
+            <td class="item-summary">
+              {{ getItemSummary(request) }}
+            </td>
+
+            <td class="quantity">
+              {{ getTotalQuantity(request) }}
+            </td>
+
+            <td>
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(request.requestStatusName)">
+                {{ request.requestStatusName }}
+              </span>
+            </td>
+
+          
+
+            <!-- Actions depend on current status -->
+            <td>
+              <div class="action-buttons">
+
+                <!-- Requested: Dispatch + Cancel -->
+                <ng-container
+                  *ngIf="canDispatch(request); else checkOtherStatus">
+
+                  <button
+                    type="button"
+                    class="action-btn dispatch-btn"
+                    (click)="goToAction(request, 'dispatch')">
+                    Dispatch
+                  </button>
+
+                  <button
+                    type="button"
+                    class="action-btn cancel-btn"
+                    (click)="goToAction(request, 'cancelled')">
+                    Cancel
+                  </button>
+
+                </ng-container>
+
+                <ng-template #checkOtherStatus>
+
+                  <!-- Dispatched: Receive -->
+                  <button
+                    *ngIf="canReceive(request)"
+                    type="button"
+                    class="action-btn receive-btn"
+                    (click)="goToAction(request, 'received')">
+                    Receive
+                  </button>
+
+                  <!-- Received: Completed -->
+                  <button
+                    *ngIf="isReceived(request)"
+                    type="button"
+                    class="action-btn completed-btn"
+                    disabled>
+                    ✓ Completed
+                  </button>
+
+                  <!-- Cancelled: disabled -->
+                  <button
+                    *ngIf="isCancelled(request)"
+                    type="button"
+                    class="action-btn cancelled-btn"
+                    disabled>
+                    ✕ Cancelled
+                  </button>
+
+                  <!-- Fallback for unknown statuses -->
+                  <span
+                    class="no-action"
+                    *ngIf="
+                      !canReceive(request) &&
+                      !isReceived(request) &&
+                      !isCancelled(request)
+                    ">
+                    —
+                  </span>
+
+                </ng-template>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="requests.length === 0">
+            <td colspan="8" class="empty-state">
+              No stock requests found.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="!loading">
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="!hasPreviousPage"
+        (click)="changePage(pageNumber - 1)">
+        ← Previous
+      </button>
+
+      <span>Page {{ pageNumber }}</span>
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="!hasNextPage"
+        (click)="changePage(pageNumber + 1)">
+        Next →
+      </button>
+
+    </div>
+
+  </section>
+
+</div>

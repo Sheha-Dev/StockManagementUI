@@ -2,7 +2,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, StockRequestDto, StockRequestResponseDto } from '../models/stock-request';
+
+import {
+  ApiResponse,
+  StockRequestDto,
+  StockReqResponseDto
+} from '../models/stock-request';
+
 import { environment } from '../enviorments/enviorments';
 
 @Injectable({
@@ -14,7 +20,6 @@ export class StockRequestService {
 
   constructor(private http: HttpClient) {}
 
-  // Get stock requests with optional filters and pagination
   getRequests(
     requestStatusId?: string,
     fromBranchId?: string,
@@ -22,7 +27,7 @@ export class StockRequestService {
     productId?: string,
     pageNumber: number = 1,
     pageSize: number = 10
-  ): Observable<ApiResponse<StockRequestResponseDto[]>> {
+  ): Observable<ApiResponse<StockReqResponseDto[]>> {
 
     let params = new HttpParams()
       .set('pageNumber', pageNumber)
@@ -44,13 +49,12 @@ export class StockRequestService {
       params = params.set('productId', productId);
     }
 
-    return this.http.get<ApiResponse<StockRequestResponseDto[]>>(
+    return this.http.get<ApiResponse<StockReqResponseDto[]>>(
       `${this.apiUrl}/Requests`,
       { params }
     );
   }
 
-  // Create a new stock request
   createRequest(dto: StockRequestDto): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/Requests`,
@@ -58,7 +62,6 @@ export class StockRequestService {
     );
   }
 
-  // Dispatch a stock request
   dispatchRequest(requestId: string): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/${requestId}/dispatch`,
@@ -66,7 +69,6 @@ export class StockRequestService {
     );
   }
 
-  // Receive a stock request
   receiveRequest(requestId: string): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/${requestId}/receive`,
@@ -74,7 +76,6 @@ export class StockRequestService {
     );
   }
 
-  // Cancel a stock request
   cancelRequest(requestId: string): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/${requestId}/cancel`,

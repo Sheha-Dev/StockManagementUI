@@ -1,0 +1,392 @@
+
+<div class="request-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1>{{ pageTitle }}</h1>
+
+      <p *ngIf="mode === 'request'">
+        Select branches and add the products you want to request.
+      </p>
+
+      <p *ngIf="mode !== 'request'">
+        Review the selected stock request before continuing.
+      </p>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div
+    class="alert alert-success"
+    *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <!-- Error Message -->
+  <div
+    class="alert alert-error"
+    *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- =================================== -->
+  <!-- CREATE REQUEST MODE                 -->
+  <!-- =================================== -->
+
+  <section
+    class="form-card"
+    *ngIf="mode === 'request'">
+
+    <div class="card-header">
+      <h2>Request Details</h2>
+      <span class="required-note">* Required fields</span>
+    </div>
+
+    <form
+      [formGroup]="requestForm"
+      (ngSubmit)="submitRequest()">
+
+      <!-- Branch Selection -->
+      <div class="branch-grid">
+
+        <div class="form-field">
+          <label for="fromBranchId">
+            From Branch <span>*</span>
+          </label>
+
+          <select
+            id="fromBranchId"
+            formControlName="fromBranchId">
+
+            <option value="">
+              Select source branch
+            </option>
+
+            <option
+              *ngFor="let branch of branches"
+              [value]="branch.branchId">
+              {{ branch.branchName }}
+            </option>
+          </select>
+
+          <small
+            class="field-error"
+            *ngIf="
+              requestForm.get('fromBranchId')?.touched &&
+              requestForm.get('fromBranchId')?.invalid
+            ">
+            Please select the source branch.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="toBranchId">
+            To Branch <span>*</span>
+          </label>
+
+          <select
+            id="toBranchId"
+            formControlName="toBranchId">
+
+            <option value="">
+              Select destination branch
+            </option>
+
+            <option
+              *ngFor="let branch of branches"
+              [value]="branch.branchId">
+              {{ branch.branchName }}
+            </option>
+          </select>
+
+          <small
+            class="field-error"
+            *ngIf="
+              requestForm.get('toBranchId')?.touched &&
+              requestForm.get('toBranchId')?.invalid
+            ">
+            Please select the destination branch.
+          </small>
+        </div>
+
+      </div>
+
+      <!-- Different Branch Validation -->
+      <div
+        class="field-error form-level-error"
+        *ngIf="
+          requestForm.get('fromBranchId')?.value &&
+          requestForm.get('toBranchId')?.value &&
+          requestForm.get('fromBranchId')?.value ===
+          requestForm.get('toBranchId')?.value
+        ">
+        Source and destination branches must be different.
+      </div>
+
+      <!-- Request Items Header -->
+      <div class="items-header">
+        <div>
+          <h2>Request Items</h2>
+          <p>Add one or more products and their quantities.</p>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary add-button"
+          [disabled]="loadingDropdowns"
+          (click)="addRequestItem()">
+          + Add Product
+        </button>
+      </div>
+
+      <!-- Request Items -->
+      <div
+        class="items-list"
+        formArrayName="requestItems">
+
+        <div
+          class="item-row"
+          *ngFor="
+            let item of requestItems.controls;
+            let i = index
+          "
+          [formGroupName]="i">
+
+          <div class="item-number">
+            {{ i + 1 }}
+          </div>
+
+          <div class="form-field product-field">
+            <label [for]="'product-' + i">
+              Product <span>*</span>
+            </label>
+
+            <select
+              [id]="'product-' + i"
+              formControlName="productId">
+
+              <option value="">Select product</option>
+
+              <option
+                *ngFor="let product of products"
+                [value]="product.productId">
+                {{ product.productName }}
+              </option>
+            </select>
+
+            <small
+              class="field-error"
+              *ngIf="
+                item.get('productId')?.touched &&
+                item.get('productId')?.invalid
+              ">
+              Select a product.
+            </small>
+          </div>
+
+          <div class="form-field quantity-field">
+            <label [for]="'quantity-' + i">
+              Quantity <span>*</span>
+            </label>
+
+            <input
+              [id]="'quantity-' + i"
+              type="number"
+              min="1"
+              step="1"
+              formControlName="quantity"
+              placeholder="Enter quantity">
+
+            <small
+              class="field-error"
+              *ngIf="
+                item.get('quantity')?.touched &&
+                item.get('quantity')?.invalid
+              ">
+              Enter a positive whole number.
+            </small>
+          </div>
+
+          <button
+            type="button"
+            class="remove-button"
+            [disabled]="requestItems.length === 1"
+            [attr.aria-label]="'Remove product row ' + (i + 1)"
+            (click)="removeRequestItem(i)">
+            ×
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Create Request Footer -->
+      <div class="form-footer">
+        <span class="item-count">
+          {{ requestItems.length }} product row(s)
+        </span>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="submitting || loadingDropdowns">
+
+          <span *ngIf="!submitting">
+            Create Request
+          </span>
+
+          <span *ngIf="submitting">
+            Creating...
+          </span>
+        </button>
+      </div>
+
+      <p
+        class="loading-note"
+        *ngIf="loadingDropdowns">
+        Loading branches and products...
+      </p>
+
+    </form>
+  </section>
+
+  <!-- =================================== -->
+  <!-- DISPATCH / RECEIVE / CANCEL MODE    -->
+  <!-- =================================== -->
+
+  <section
+    class="action-card"
+    *ngIf="mode !== 'request'">
+
+    <!-- Loading -->
+    <div
+      class="loading-note"
+      *ngIf="loading">
+      Loading request details...
+    </div>
+
+    <!-- Request Not Found -->
+    <div
+      *ngIf="!loading && !selectedRequest && !errorMessage">
+      Please wait while the request is loaded.
+    </div>
+
+    <!-- Selected Request Details -->
+    <ng-container
+      *ngIf="!loading && selectedRequest">
+
+      <div class="action-icon">
+        {{ mode === 'dispatch' ? '➤' :
+           mode === 'received' ? '↓' : '×' }}
+      </div>
+
+      <h2>{{ pageTitle }}</h2>
+
+      <p>
+        Request ID:
+        <strong>{{ selectedRequest.requestId }}</strong>
+      </p>
+
+      <p>
+        Status:
+        <strong>{{ selectedRequest.requestStatusName }}</strong>
+      </p>
+
+      <p>
+        Created Date:
+        <strong>
+          {{ selectedRequest.createdDate | date:'medium' }}
+        </strong>
+      </p>
+
+      <!-- Branch Details -->
+      <div class="request-details">
+
+        <div class="branch-grid">
+
+          <div class="form-field">
+            <label>From Branch</label>
+
+            <input
+              type="text"
+              [value]="selectedRequest.fromBranchName"
+              readonly>
+          </div>
+
+          <div class="form-field">
+            <label>To Branch</label>
+
+            <input
+              type="text"
+              [value]="selectedRequest.toBranchName"
+              readonly>
+          </div>
+
+        </div>
+
+        <!-- Product Details -->
+        <h3>Request Items</h3>
+
+        <div class="items-list">
+
+          <div
+            class="item-row"
+            *ngFor="let item of selectedRequest.requestItems">
+
+            <div class="form-field product-field">
+              <label>Product</label>
+
+              <input
+                type="text"
+                [value]="item.productName || item.productId"
+                readonly>
+            </div>
+
+            <div class="form-field quantity-field">
+              <label>Quantity</label>
+
+              <input
+                type="number"
+                [value]="item.quantity"
+                readonly>
+            </div>
+
+          </div>
+
+          <p *ngIf="!selectedRequest.requestItems?.length">
+            No request items found.
+          </p>
+
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="form-footer">
+
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="{
+            'btn-primary': mode === 'dispatch',
+            'btn-success': mode === 'received',
+            'btn-danger': mode === 'cancelled'
+          }"
+          [disabled]="submitting || loading"
+          (click)="performAction()">
+
+          <span *ngIf="!submitting">
+            {{ actionButtonText }}
+          </span>
+
+          <span *ngIf="submitting">
+            Processing...
+          </span>
+
+        </button>
+
+      </div>
+
+    </ng-container>
+  </section>
+
+</div>

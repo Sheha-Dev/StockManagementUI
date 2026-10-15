@@ -1,0 +1,60 @@
+
+<aside class="sidebar" [class.mobile-open]="mobileOpen">
+
+  <div class="brand">
+    <div class="brand-icon">S</div>
+
+    <div class="brand-text">
+      <h2>StockFlow</h2>
+      <span>Management System</span>
+    </div>
+
+    <!-- <button
+      type="button"
+      class="close-menu"
+      aria-label="Close navigation"
+      (click)="closeMenu.emit()">
+      ×
+    </button> -->
+  </div>
+
+  <div class="navigation-label">MAIN MENU</div>
+
+  <nav class="navigation">
+    <button
+      type="button"
+      *ngFor="let item of menuItems"
+      class="nav-item"
+      [class.active]="activeMenu === item.label"
+      (click)="selectMenu(item.label)">
+
+      <span class="nav-icon">{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+
+      <span
+        class="active-indicator"
+        *ngIf="activeMenu === item.label">
+      </span>
+    </button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="help-card">
+      <div class="help-icon">?</div>
+      <h3>Need help?</h3>
+      <p>Contact support if you need assistance.</p>
+      <a href="mailto:support@example.com">Contact support →</a>
+    </div>
+
+    <button type="button" class="settings-link">
+      <span>⚙</span>
+      Settings
+    </button>
+
+    <div class="sidebar-version">
+      <span>StockFlow</span>
+      <span>v1.0.0</span>
+    </div>
+  </div>
+
+</aside>
