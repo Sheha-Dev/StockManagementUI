@@ -1,0 +1,12 @@
+
+<app-menu
+  (menuSelected)="onMenuSelected($event)">
+</app-menu>
+
+<main class="home-container">
+  @if (activeView === 'form') {
+    <app-stock-request-form></app-stock-request-form>
+  } @else {
+    
+  }
+</main>

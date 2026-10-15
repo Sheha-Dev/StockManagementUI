@@ -1,0 +1,28 @@
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f4f7fb;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1e293b;
+}
+
+.home-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 28px 32px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-container {
+    padding: 14px 10px;
+  }
+}
